@@ -8,6 +8,8 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Bell, Menu, X, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -24,6 +26,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, title, role, navigation }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(3)
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false)
   const router = useRouter()
 
   const handleLogout = () => {
@@ -31,10 +34,35 @@ export function DashboardLayout({ children, title, role, navigation }: Dashboard
   }
 
   const handleNotifications = () => {
-    setNotificationCount(0)
-    // In a real app, this would open a notifications panel
-    alert("Notifications panel would open here")
+    setNotificationPanelOpen(!notificationPanelOpen)
+    if (!notificationPanelOpen) {
+      setNotificationCount(0) // Mark as read when opening
+    }
   }
+
+  const notifications = [
+    {
+      id: 1,
+      title: "High Risk Student Alert",
+      message: "Student John Doe has been flagged as high risk for dropout",
+      time: "2 minutes ago",
+      type: "alert",
+    },
+    {
+      id: 2,
+      title: "Meeting Reminder",
+      message: "Department meeting scheduled for tomorrow at 10 AM",
+      time: "1 hour ago",
+      type: "reminder",
+    },
+    {
+      id: 3,
+      title: "New Message",
+      message: "You have a new message from Sarah Wilson",
+      time: "3 hours ago",
+      type: "message",
+    },
+  ]
 
   return (
     <div className="min-h-screen bg-background">
@@ -111,18 +139,60 @@ export function DashboardLayout({ children, title, role, navigation }: Dashboard
             </div>
 
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm" className="relative" onClick={handleNotifications}>
-                <Bell className="h-4 w-4" />
-                {notificationCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
-                    {notificationCount}
-                  </Badge>
+              <div className="relative">
+                <Button variant="ghost" size="sm" className="relative" onClick={handleNotifications}>
+                  <Bell className="h-4 w-4" />
+                  {notificationCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
+                      {notificationCount}
+                    </Badge>
+                  )}
+                </Button>
+
+                {notificationPanelOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-80 z-50">
+                    <Card className="shadow-lg border">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm">Notifications</CardTitle>
+                        <CardDescription className="text-xs">
+                          You have {notifications.length} notifications
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <ScrollArea className="h-64">
+                          <div className="space-y-1">
+                            {notifications.map((notification) => (
+                              <div
+                                key={notification.id}
+                                className="flex flex-col space-y-1 p-3 hover:bg-muted/50 cursor-pointer border-b border-border/50 last:border-b-0"
+                              >
+                                <div className="flex items-start justify-between">
+                                  <p className="text-sm font-medium leading-none">{notification.title}</p>
+                                  <span className="text-xs text-muted-foreground">{notification.time}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{notification.message}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                        <div className="p-3 border-t border-border">
+                          <Button variant="ghost" size="sm" className="w-full text-xs">
+                            View All Notifications
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
-              </Button>
+              </div>
               <ThemeToggle />
             </div>
           </div>
         </div>
+
+        {notificationPanelOpen && (
+          <div className="fixed inset-0 z-30" onClick={() => setNotificationPanelOpen(false)} />
+        )}
 
         {/* Page content */}
         <main className="p-6">{children}</main>
